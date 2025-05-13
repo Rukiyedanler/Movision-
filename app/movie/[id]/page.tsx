@@ -1,87 +1,88 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Heart, Eye, Clock, Play, ArrowLeft, Star } from "lucide-react"
+import { ArrowLeft, Star, Play, Heart, Eye, Clock, Film } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { MainNav } from "@/components/main-nav"
+import { getMovieDetails, formatMovieData } from "@/lib/tmdb"
+import { CommentSection } from "@/components/comment-section"
 
 export default function MovieDetailPage({ params }: { params: { id: string } }) {
+  const [movie, setMovie] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [showTrailer, setShowTrailer] = useState(false)
-  const [comment, setComment] = useState("")
   const router = useRouter()
 
-  // In a real implementation, this data would come from an API
-  const movie = {
-    id: Number.parseInt(params.id),
-    title: "Dune: Part Two",
-    posterUrl: "/placeholder.svg?height=600&width=400",
-    backdropUrl: "/placeholder.svg?height=400&width=1200",
-    releaseYear: 2024,
-    director: "Denis Villeneuve",
-    studio: "Warner Bros. Pictures",
-    duration: "166 dakika",
-    rating: 8.7,
-    description:
-      "Paul Atreides, Chani ve Fremen'lerle birlikte, Harkonnen'lere karşı intikam almak için yola çıkar. İmparatorluk ve galaksinin kaderi tehlikedeyken, Paul sevdiği kişiyle geleceği arasında seçim yapmak zorunda kalır.",
-    trailerUrl: "https://www.youtube.com/embed/Way9Dexny3w",
-    cast: [
-      { name: "Timothée Chalamet", character: "Paul Atreides", imageUrl: "/placeholder.svg?height=100&width=100" },
-      { name: "Zendaya", character: "Chani", imageUrl: "/placeholder.svg?height=100&width=100" },
-      { name: "Rebecca Ferguson", character: "Lady Jessica", imageUrl: "/placeholder.svg?height=100&width=100" },
-      { name: "Javier Bardem", character: "Stilgar", imageUrl: "/placeholder.svg?height=100&width=100" },
-    ],
-    comments: [
-      {
-        id: 1,
-        user: "ahmet123",
-        avatar: "/placeholder.svg?height=40&width=40",
-        text: "Harika bir film, görsel efektler muhteşem!",
-        date: "2 gün önce",
-      },
-      {
-        id: 2,
-        user: "ayse_film",
-        avatar: "/placeholder.svg?height=40&width=40",
-        text: "İlk filmden daha iyi olmuş. Kesinlikle izlenmeli.",
-        date: "1 hafta önce",
-      },
-    ],
+  useEffect(() => {
+    async function fetchMovieDetails() {
+      try {
+        const movieData = await getMovieDetails(Number(params.id))
+        const formattedMovie = formatMovieData(movieData)
+        setMovie(formattedMovie)
+      } catch (error) {
+        console.error("Error fetching movie details:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchMovieDetails()
+  }, [params.id])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <header className="sticky top-0 z-40 bg-background">
+          <MainNav />
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    )
   }
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real implementation, this would send the comment to an API
-    setComment("")
+  if (!movie) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <header className="sticky top-0 z-40 bg-background">
+          <MainNav />
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">Film bulunamadı</h1>
+            <p className="text-muted-foreground mb-4">İstediğiniz film bulunamadı veya bir hata oluştu.</p>
+            <Button onClick={() => router.push("/")}>Ana Sayfaya Dön</Button>
+          </div>
+        </div>
+      </div>
+    )
   }
+
+  const trailerUrl = movie.trailerUrl ? `https://www.youtube.com/embed/${movie.trailerUrl}` : null
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background">
-        <div className="container flex h-16 items-center">
-          <MainNav />
-        </div>
+      <header className="sticky top-0 z-40 bg-transparent">
+        <MainNav />
       </header>
 
       <main className="flex-1">
         {/* Hero Section with Backdrop */}
-        <div className="relative h-[50vh] w-full">
+        <div className="relative h-[60vh] w-full">
           <Image
-            src={movie.backdropUrl || "/placeholder.svg"}
+            src={movie.backdropUrl || "/placeholder.svg?height=400&width=1200"}
             alt={movie.title}
             fill
             className="object-cover brightness-50"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
           <div className="absolute bottom-0 left-0 p-6 w-full">
-            <Button variant="ghost" size="sm" className="mb-4" onClick={() => router.back()}>
+            <Button variant="ghost" size="sm" className="mb-4 hover:bg-black/20" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Geri
             </Button>
@@ -92,25 +93,39 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
               <div className="flex-1">
                 <h1 className="text-3xl font-bold">{movie.title}</h1>
                 <div className="flex items-center gap-2 mt-2">
-                  <Badge>{movie.releaseYear}</Badge>
-                  <Badge>{movie.duration}</Badge>
-                  <div className="flex items-center">
+                  <Badge className="bg-primary/80 hover:bg-primary">{movie.releaseYear}</Badge>
+                  <Badge className="bg-primary/80 hover:bg-primary">{movie.duration}</Badge>
+                  <div className="flex items-center bg-black/40 px-2 py-0.5 rounded-full">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
                     <span>{movie.rating}/10</span>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <Button onClick={() => setShowTrailer(true)} className="gap-2">
-                    <Play className="h-4 w-4" />
-                    Fragmanı İzle
-                  </Button>
-                  <Button variant="outline" size="icon">
+                  {trailerUrl && (
+                    <Button onClick={() => setShowTrailer(true)} className="gap-2 bg-primary hover:bg-primary/90">
+                      <Play className="h-4 w-4" />
+                      Fragmanı İzle
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-black/20 border-white/20 hover:bg-primary/20 hover:text-primary"
+                  >
                     <Heart className="h-5 w-5" />
                   </Button>
-                  <Button variant="outline" size="icon">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-black/20 border-white/20 hover:bg-primary/20 hover:text-primary"
+                  >
                     <Eye className="h-5 w-5" />
                   </Button>
-                  <Button variant="outline" size="icon">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-black/20 border-white/20 hover:bg-primary/20 hover:text-primary"
+                  >
                     <Clock className="h-5 w-5" />
                   </Button>
                 </div>
@@ -120,11 +135,11 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
         </div>
 
         {/* Trailer Modal */}
-        {showTrailer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+        {showTrailer && trailerUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
             <div className="relative w-full max-w-4xl aspect-video">
               <iframe
-                src={movie.trailerUrl}
+                src={trailerUrl}
                 className="absolute inset-0 h-full w-full"
                 allowFullScreen
                 title={`${movie.title} Trailer`}
@@ -177,11 +192,11 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
 
             <TabsContent value="cast">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {movie.cast.map((actor, index) => (
+                {movie.cast.map((actor: any, index: number) => (
                   <div key={index} className="flex flex-col items-center text-center">
                     <div className="relative h-32 w-32 overflow-hidden rounded-full mb-3">
                       <Image
-                        src={actor.imageUrl || "/placeholder.svg"}
+                        src={actor.imageUrl || "/placeholder.svg?height=100&width=100"}
                         alt={actor.name}
                         fill
                         className="object-cover"
@@ -195,34 +210,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
             </TabsContent>
 
             <TabsContent value="comments">
-              <div className="space-y-6">
-                <form onSubmit={handleCommentSubmit} className="space-y-4">
-                  <Textarea
-                    placeholder="Yorumunuzu yazın..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                  />
-                  <Button type="submit">Yorum Yap</Button>
-                </form>
-
-                <div className="space-y-6">
-                  {movie.comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-4">
-                      <Avatar>
-                        <AvatarImage src={comment.avatar || "/placeholder.svg"} alt={comment.user} />
-                        <AvatarFallback>{comment.user.substring(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{comment.user}</h4>
-                          <span className="text-xs text-muted-foreground">{comment.date}</span>
-                        </div>
-                        <p className="mt-1">{comment.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <CommentSection contentId={params.id} contentType="movie" />
             </TabsContent>
           </Tabs>
         </div>
@@ -230,8 +218,12 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
 
       <footer className="border-t py-6">
         <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div className="flex items-center gap-2">
+            <Film className="h-5 w-5 text-primary" />
+            <span className="font-bold text-lg text-primary">Movision</span>
+          </div>
           <p className="text-center text-sm text-muted-foreground md:text-left">
-            &copy; {new Date().getFullYear()} FilmFinder. Tüm hakları saklıdır.
+            &copy; {new Date().getFullYear()} Movision. Tüm hakları saklıdır.
           </p>
         </div>
       </footer>
