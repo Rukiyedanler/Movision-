@@ -70,14 +70,21 @@ export function CommentSection({ contentId, contentType }: CommentSectionProps) 
   }
 
   // Check if user is logged in (in a real app)
-  const isLoggedIn = false // This would be determined by auth state
+  const isLoggedIn = true // This would be determined by auth state
 
   return (
     <div className="space-y-6">
       {isLoggedIn ? (
         <form onSubmit={handleCommentSubmit} className="space-y-4">
-          <Textarea placeholder="Yorumunuzu yazın..." value={comment} onChange={(e) => setComment(e.target.value)} />
-          <Button type="submit">Yorum Yap</Button>
+          <Textarea
+            placeholder="Yorumunuzu yazın..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            className="min-h-[100px] border-primary/20 focus-visible:ring-primary"
+          />
+          <Button type="submit" className="bg-primary hover:bg-primary/90">
+            Yorum Yap
+          </Button>
         </form>
       ) : (
         <div className="bg-muted/50 p-4 rounded-lg text-center">
@@ -89,10 +96,12 @@ export function CommentSection({ contentId, contentType }: CommentSectionProps) 
       <div className="space-y-6">
         {comments.length > 0 ? (
           comments.map((comment) => (
-            <div key={comment.id} className="flex gap-4">
+            <div key={comment.id} className="flex gap-4 p-4 rounded-lg bg-muted/30">
               <Avatar>
                 <AvatarImage src={comment.avatar || "/placeholder.svg"} alt={comment.user} />
-                <AvatarFallback>{comment.user.substring(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="bg-primary/20 text-primary">
+                  {comment.user.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div>
                 <div className="flex items-center gap-2">

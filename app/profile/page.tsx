@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Image from "next/image"
-import { Camera, Save } from "lucide-react"
+import { Camera, Save, User, Key, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MainNav } from "@/components/main-nav"
 import { useToast } from "@/components/ui/use-toast"
+import { useLanguage } from "@/components/language-provider"
 
 export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -24,7 +25,10 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [securityQuestion, setSecurityQuestion] = useState("pet")
   const [securityAnswer, setSecurityAnswer] = useState("")
+  const [securityQuestionForReset, setSecurityQuestionForReset] = useState("")
+  const [securityAnswerForReset, setSecurityAnswerForReset] = useState("")
   const { toast } = useToast()
+  const { t } = useLanguage()
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -66,9 +70,19 @@ export default function ProfilePage() {
       return
     }
 
+    // Check security question
+    if (!securityQuestionForReset || !securityAnswerForReset) {
+      toast({
+        variant: "destructive",
+        title: "Güvenlik sorusu gerekli",
+        description: "Şifre değiştirmek için güvenlik sorusunu cevaplamalısınız.",
+      })
+      return
+    }
+
     setIsLoading(true)
 
-    // In a real implementation, this would update the password in the database
+    // In a real implementation, this would verify the security question and update the password
     setTimeout(() => {
       toast({
         title: "Şifre güncellendi",
@@ -77,6 +91,8 @@ export default function ProfilePage() {
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
+      setSecurityQuestionForReset("")
+      setSecurityAnswerForReset("")
       setIsLoading(false)
     }, 1000)
   }
@@ -99,9 +115,7 @@ export default function ProfilePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-background">
-        <div className="container flex h-16 items-center">
-          <MainNav />
-        </div>
+        <MainNav />
       </header>
 
       <main className="flex-1 container py-8">
@@ -138,9 +152,18 @@ export default function ProfilePage() {
           <div>
             <Tabs defaultValue="profile">
               <TabsList className="mb-6">
-                <TabsTrigger value="profile">Profil</TabsTrigger>
-                <TabsTrigger value="password">Şifre</TabsTrigger>
-                <TabsTrigger value="security">Güvenlik</TabsTrigger>
+                <TabsTrigger value="profile">
+                  <User className="h-4 w-4 mr-2" />
+                  Profil
+                </TabsTrigger>
+                <TabsTrigger value="password">
+                  <Key className="h-4 w-4 mr-2" />
+                  Şifre
+                </TabsTrigger>
+                <TabsTrigger value="security">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Güvenlik
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="profile">
@@ -214,6 +237,40 @@ export default function ProfilePage() {
                           required
                         />
                       </div>
+
+                      <div className="pt-4 border-t">
+                        <h3 className="text-sm font-medium mb-3">Güvenlik Doğrulaması</h3>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="security-question-reset">Güvenlik Sorusu</Label>
+                            <Select
+                              value={securityQuestionForReset}
+                              onValueChange={setSecurityQuestionForReset}
+                              required
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Güvenlik sorusu seçin" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pet">İlk evcil hayvanınızın adı nedir?</SelectItem>
+                                <SelectItem value="school">İlk gittiğiniz okulun adı nedir?</SelectItem>
+                                <SelectItem value="city">Doğduğunuz şehir neresidir?</SelectItem>
+                                <SelectItem value="mother">Annenizin kızlık soyadı nedir?</SelectItem>
+                                <SelectItem value="movie">En sevdiğiniz film nedir?</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="security-answer-reset">Cevap</Label>
+                            <Input
+                              id="security-answer-reset"
+                              value={securityAnswerForReset}
+                              onChange={(e) => setSecurityAnswerForReset(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                     <CardFooter>
                       <Button type="submit" disabled={isLoading}>
@@ -272,8 +329,12 @@ export default function ProfilePage() {
 
       <footer className="border-t py-6">
         <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div className="flex items-center gap-2">
+            <Image src="/movision.ico" alt="Movision" width={20} height={20} />
+            <span className="font-bold text-lg text-primary">Movision</span>
+          </div>
           <p className="text-center text-sm text-muted-foreground md:text-left">
-            &copy; {new Date().getFullYear()} FilmFinder. Tüm hakları saklıdır.
+            &copy; {new Date().getFullYear()} Movision. {t("footer.rights")}
           </p>
         </div>
       </footer>

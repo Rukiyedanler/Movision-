@@ -51,13 +51,28 @@ export function MovieActions({ type, id }: MovieActionsProps) {
 
   return (
     <>
-      <Button variant={liked ? "default" : "outline"} size="icon" onClick={handleLike}>
+      <Button
+        variant={liked ? "default" : "outline"}
+        size="icon"
+        onClick={handleLike}
+        className={`rounded-full ${liked ? "bg-primary hover:bg-primary/90" : "bg-black/20 border-white/20 hover:bg-primary/20 hover:text-primary"}`}
+      >
         <Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />
       </Button>
-      <Button variant={watched ? "default" : "outline"} size="icon" onClick={handleWatched}>
+      <Button
+        variant={watched ? "default" : "outline"}
+        size="icon"
+        onClick={handleWatched}
+        className={`rounded-full ${watched ? "bg-primary hover:bg-primary/90" : "bg-black/20 border-white/20 hover:bg-primary/20 hover:text-primary"}`}
+      >
         <Eye className="h-5 w-5" />
       </Button>
-      <Button variant={watchlist ? "default" : "outline"} size="icon" onClick={handleWatchlist}>
+      <Button
+        variant={watchlist ? "default" : "outline"}
+        size="icon"
+        onClick={handleWatchlist}
+        className={`rounded-full ${watchlist ? "bg-primary hover:bg-primary/90" : "bg-black/20 border-white/20 hover:bg-primary/20 hover:text-primary"}`}
+      >
         <Clock className="h-5 w-5" />
       </Button>
     </>
